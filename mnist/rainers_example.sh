@@ -1,7 +1,6 @@
-
-# set context to kubeflow
+echo "set kubectl context to kubeflow"
 kubectl config set-context $(kubectl config current-context) --namespace=kubeflow
-# install kustomize
+echo "install kustomize"
 opsys=linux  # or darwin, or windows
 curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/tags/v2.0.3 |\
   grep browser_download |\
@@ -11,14 +10,17 @@ curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/tags/v2.
 mv kustomize_*_${opsys}_amd64 kustomize
 chmod u+x kustomize
 export PATH=$PATH:$(pwd)
-#set docker url
-export DOCKER_URL="${$2:-m1st3rb3an/kf_mnist_example1:dev}"
-export TRAIN_NAME="${$1:-mnist-train-local}"
-export PVC_NAME="${$3:-workspace-rainer-kubeflow-example}"
-echo "DOCKER_URL: " + $DOCKER_URL
-echo "TRAIN_NAME: " + $TRAIN_NAME
-echo "PVC_NAME: " + $PVC_NAME
-# start customizing yamls
+
+echo "rainers_example.sh TRAIN_NAME DOCKER_URL PVC_NAME"
+DOCKER_URL=${2:-m1st3rb3an/kf_mnist_example1:dev}
+TRAIN_NAME=${1:-'mnist-train-local-'$(date -d "Oct 21 1973" +%s)}
+PVC_NAME=${3:-"workspace-rainer-kubeflow-example"}
+echo "Using following parameter values"
+echo "DOCKER_URL: "  $DOCKER_URL
+echo "TRAIN_NAME: "  $TRAIN_NAME
+echo "PVC_NAME: "  $PVC_NAME
+
+echo "start customizing yamls"
 cd training/local
 kustomize edit add configmap mnist-map-training --from-literal=name=$TRAIN_NAME
 kustomize edit set image training-image=$DOCKER_URL
@@ -31,8 +33,11 @@ kustomize edit add configmap mnist-map-training --from-literal=pvcMountPath=/mnt
 kustomize edit add configmap mnist-map-training --from-literal=modelDir=/mnt
 kustomize edit add configmap mnist-map-training --from-literal=exportDir=/mnt/export
 
+echo "Submitting training job to kubernetes cluster"
 kustomize build . |kubectl apply -f -
 
+echo "Querying tfjobs"
 kubectl get tfjobs -o yaml $TRAIN_NAME
 
-kubectl logs --follow $TRAIN_NAME-chief-0
+echo "Tailing los"
+kubectl logs --follow ${TRAIN_NAME}-chief-0
