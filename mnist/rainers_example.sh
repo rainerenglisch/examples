@@ -27,14 +27,14 @@ git checkout training/local/*
 cd training/local
 kustomize edit add configmap mnist-map-training --from-literal=name=$TRAIN_NAME
 kustomize edit set image training-image=$DOCKER_URL
-#../base/definition.sh --numPs 1 --numWorkers 2
+../base/definition.sh --numPs 1 --numWorkers 2
 kustomize edit add configmap mnist-map-training --from-literal=trainSteps=200
 kustomize edit add configmap mnist-map-training --from-literal=batchSize=100
 kustomize edit add configmap mnist-map-training --from-literal=learningRate=0.01
 kustomize edit add configmap mnist-map-training --from-literal=pvcName=${PVC_NAME}
 kustomize edit add configmap mnist-map-training --from-literal=pvcMountPath=/mnt
-kustomize edit add configmap mnist-map-training --from-literal=modelDir=/mnt
-kustomize edit add configmap mnist-map-training --from-literal=exportDir=/mnt/export
+kustomize edit add configmap mnist-map-training --from-literal=modelDir=/mnt/${TRAIN_NAME}
+kustomize edit add configmap mnist-map-training --from-literal=exportDir=/mnt/${TRAIN_NAME}/export
 
 echo "Submitting training job to kubernetes cluster"
 kustomize build . |kubectl apply -f -
