@@ -1,3 +1,4 @@
+
 # set context to kubeflow
 kubectl config set-context $(kubectl config current-context) --namespace=kubeflow
 # install kustomize
@@ -11,9 +12,12 @@ mv kustomize_*_${opsys}_amd64 kustomize
 chmod u+x kustomize
 export PATH=$PATH:$(pwd)
 #set docker url
-export DOCKER_URL=m1st3rb3an/kf_mnist_example1:dev
-export TRAIN_NAME=mnist-train-local
-export PVC_NAME=workspace-rainer-kubeflow-example
+export DOCKER_URL="${$2:-m1st3rb3an/kf_mnist_example1:dev}"
+export TRAIN_NAME="${$1:-mnist-train-local}"
+export PVC_NAME="${$3:-workspace-rainer-kubeflow-example}"
+echo "DOCKER_URL: " + $DOCKER_URL
+echo "TRAIN_NAME: " + $TRAIN_NAME
+echo "PVC_NAME: " + $PVC_NAME
 # start customizing yamls
 cd training/local
 kustomize edit add configmap mnist-map-training --from-literal=name=$TRAIN_NAME
